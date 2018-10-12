@@ -64,6 +64,157 @@ It'd be also nice to support some features based on new ES syntaxes
 
 __So I decided to build a new compiler that is small enough to use in the browser__
 
+---
+
+## What is it all about?
+
+In emuto you build transformations by combining filters.
+
+Functions calls, literals, expressions and operations are filters, for example:
+
+### Literals
+
+```clike
+["Hello", "World"]
+```
+
+### Function calls
+
+```clike
+map $ => $.foo
+```
+
+---
+
+### Operations
+
+```clike
+.user.name
+```
+
+```clike
+$[3, 4]
+```
+
+---
+
+## Combining filters
+
+To combine two filters you can use the pipe syntax:
+
+```clike
+["Hello", "World"] | join " "
+```
+
+Result:
+```clike
+  "Hello World"
+```
+
+---
+
+Having the following JSON file as input:
+
+```json
+[
+  {"user": {"name": "John", "age": 35}},
+  {"user": {"name": "Mary", "age": 28}}
+]
+```
+
+I want to generate this output:
+
+```clike
+"Hello John, Hello Mary"
+```
+
+--
+
+Right off the bat, I only care about the user names, so I can simplify my data using this query:
+
+```javascript
+map $ => .user.name
+```
+
+--
+
+```json
+["John", "Mary"]
+```
+
+--
+
+Now I want to greet each person individually, so I do this:
+
+--
+
+```javascript
+map $ => .user.name | map $ => ["Hello", $]
+```
+
+--
+
+I can actually do that in a single map:
+
+```javascript
+map $ => ["Hello", .user.name]
+```
+
+---
+
+So now I have this:
+
+```json
+[["Hello", "John"], ["Hello", "Mary"]]
+```
+
+--
+
+Still not exactly what I want so I join the inner arrays with a space:
+
+
+```javascript
+map $ => (["Hello", .user.name] | join " ")
+```
+
+```json
+[["Hello John"], ["Hello Mary"]]
+```
+--
+
+And I join the resulting array with a comma:
+
+
+```javascript
+map $ => (["Hello", .user.name] | join " ") | join ","
+```
+
+
+```json
+"Hello John, Hello Mary"
+```
+
+--
+
+Or I could just attach their greeting to the existing object:
+
+```javascript
+map $ => {
+  "user": {
+    ...$.user,
+    "greeting": (["Hello", $.user.name] | join " ")
+  }
+}
+```
+
+---
+
+## More info
+
+* GitHub: [https://github.com/kantord/emuto](https://github.com/kantord/emuto)
+* Documentation: [https://kantord.github.io/emuto/](https://kantord.github.io/emuto/)
+* Live demo: [https://kantord.github.io/emuto-demo/](https://kantord.github.io/emuto-demo/)
+
     </textarea>
     <script src="https://remarkjs.com/downloads/remark-latest.min.js">
     </script>
